@@ -242,19 +242,5 @@ def main() -> int:
         print("ERROR: DISCORD_WEBHOOK_URL environment variable is not set.", file=sys.stderr)
         return 1
 
-    # --- TEMPORARY TEST CALL ---
-    test_advisory = {
-        "heading": "HEAVY RAINFALL WARNING (ORANGE) - NCR_PRSD",
-        "issued_at": "Issued at 08:00 PM, 15 September 2026",
-        "body": "Metro Manila (Quezon City, Manila) may experience intense rainfall and potential flooding.",
-        "type": "heavy rainfall warning",
-        "key": "test_key_12345"
-    }
-    print("Sending test message to Discord...")
-    send_discord(webhook_url, test_advisory)
-    print("Test alert sent successfully!")
-    return 0
-    # --- END TEST CALL ---
-
 if __name__ == "__main__":
     sys.exit(main())
