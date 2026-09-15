@@ -37,6 +37,28 @@ STOP_MARKERS = [
     "LATEST WEATHER",
 ]
 
+# Keywords to strictly filter for Metro Manila & its cities
+METRO_MANILA_KEYWORDS = [
+    "metro manila",
+    "manila",
+    "quezon city",
+    "caloocan",
+    "las piñas",
+    "makati",
+    "malabon",
+    "mandaluyong",
+    "marikina",
+    "muntinlupa",
+    "navotas",
+    "parañaque",
+    "pasay",
+    "pasig",
+    "san juan",
+    "taguig",
+    "valenzuela",
+    "pateros",
+]
+
 DISCORD_COLORS = {
     "thunderstorm watch": 0xF1C40F,
     "thunderstorm advisory": 0xE67E22,
@@ -109,15 +131,18 @@ def extract_advisories(html: str) -> list[dict]:
             key_source = f"{heading}|{issued_at}"
             key = hashlib.sha256(key_source.encode("utf-8")).hexdigest()
 
-            advisories.append(
-                {
-                    "heading": heading,
-                    "issued_at": issued_at,
-                    "body": body,
-                    "type": adv_type,
-                    "key": key,
-                }
-            )
+            # Location Filter: Only include advisories targeting Metro Manila cities
+            full_content = f"{heading} {body}".lower()
+            if any(place in full_content for place in METRO_MANILA_KEYWORDS):
+                advisories.append(
+                    {
+                        "heading": heading,
+                        "issued_at": issued_at,
+                        "body": body,
+                        "type": adv_type,
+                        "key": key,
+                    }
+                )
 
             i = j
         else:
@@ -140,22 +165,17 @@ def save_state(state: dict) -> None:
     STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
 
-def mentions_metro_manila_or_qc(advisory: dict) -> bool:
-    text = f"{advisory['heading']} {advisory['body']}".lower()
-    return "metro manila" in text or "quezon city" in text
-
-
 def send_discord(webhook_url: str, advisory: dict) -> None:
     color = DISCORD_COLORS.get(advisory["type"], 0x2ECC71)
     body = advisory["body"]
     if len(body) > 3500:
         body = body[:3500] + "\n… (truncated — see full bulletin on PAGASA's site)"
 
-    # Safely generate key prefix
     adv_key = advisory.get("key", "test123456")
     filename = f"advisory_{adv_key[:8]}.png"
 
     payload = {
+        "content": "🚨 **METRO MANILA may be affected**",
         "embeds": [
             {
                 "title": advisory["heading"],
@@ -167,8 +187,6 @@ def send_discord(webhook_url: str, advisory: dict) -> None:
             }
         ]
     }
-    if mentions_metro_manila_or_qc(advisory):
-        payload["content"] = "🚨 **METRO MANILA / QUEZON CITY may be affected**"
 
     image_bytes = render_advisory_card(advisory)
     resp = requests.post(
@@ -185,8 +203,39 @@ def main() -> int:
     if not webhook_url:
         print("ERROR: DISCORD_WEBHOOK_URL environment variable is not set.", file=sys.stderr)
         return 1
-        
+
+    html = fetch_page(SOURCE_URL)
+    advisories = extract_advisories(html)
+
+    state = load_state()
+    seen_keys = set(state.get("seen", []))
+
+    if not state.get("initialized", False):
+        for adv in advisories:
+            seen_keys.add(adv["key"])
+        state["seen"] = list(seen_keys)
+        state["initialized"] = True
+        save_state(state)
+        print(f"Initialized. Recorded {len(advisories)} existing Metro Manila advisory(ies) as seen.")
         return 0
+
+    new_ones = [adv for adv in advisories if adv["key"] not in seen_keys]
+
+    for adv in reversed(new_ones):
+        print(f"New Metro Manila advisory: {adv['heading']} ({adv['issued_at']})")
+        send_discord(webhook_url, adv)
+        seen_keys.add(adv["key"])
+
+    state["seen"] = list(seen_keys)
+    save_state(state)
+
+    if not new_ones:
+        print("No new Metro Manila advisories.")
+    else:
+        print(f"Posted {len(new_ones)} new advisory(ies) to Discord.")
+
+    return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
