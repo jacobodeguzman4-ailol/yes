@@ -185,9 +185,8 @@ def main() -> int:
     if not webhook_url:
         print("ERROR: DISCORD_WEBHOOK_URL environment variable is not set.", file=sys.stderr)
         return 1
-
-    # --- END TEST BLOCK ---
-
+        
+        return 0
 
 if __name__ == "__main__":
     sys.exit(main())
