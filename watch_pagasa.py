@@ -1,24 +1,6 @@
 #!/usr/bin/env python3
 """
 watch_pagasa.py
-
-Watches DOST-PAGASA's official NCR-PRSD regional forecast page for new
-Rainfall Advisory / Heavy Rainfall Warning / Thunderstorm Advisory / Thunderstorm
-Watch bulletins, and posts new ones to a Discord webhook.
-
-
-
-Why this page and not Facebook directly:
-  PAGASA's own site publishes the exact same bulletin text that gets posted to
-  Facebook, at the same time (see https://pagasa.dost.gov.ph/learnings/legend,
-  which states these are "disseminated via SMS, Social Media, and website").
-  It's a stable, official, scrape-friendly source, unlike Facebook, which
-  actively blocks automated access.
-
-Source page: https://pagasa.dost.gov.ph/regional-forecast/ncrprsd
-
-State (which advisories we've already alerted on) is kept in state.json so
-this script is safe to run on a schedule without spamming duplicate alerts.
 """
 
 import hashlib
@@ -242,6 +224,89 @@ def main() -> int:
         print(f"Posted {len(new_ones)} new advisory(ies) to Discord.")
 
     return 0
+
+METRO_MANILA_KEYWORDS = [
+    "metro manila",
+    "manila",
+    "quezon city",
+    "caloocan",
+    "las piñas",
+    "makati",
+    "malabon",
+    "mandaluyong",
+    "marikina",
+    "muntinlupa",
+    "navotas",
+    "parañaque",
+    "pasay",
+    "pasig",
+    "san juan",
+    "taguig",
+    "valenzuela",
+    "pateros",
+]
+  # inside extract_advisories(html: str):
+full_text = f"{heading} {body}".lower()
+is_for_metro_manila = any(place in full_text for place in METRO_MANILA_KEYWORDS)
+
+
+if is_for_metro_manila:
+    advisories.append(
+        {
+            "heading": heading,
+            "issued_at": issued_at,
+            "body": body,
+            "type": adv_type,
+            "key": key,
+        }
+    )
   
+  def extract_advisories(html: str) -> list[dict]:
+    soup = BeautifulSoup(html, "html.parser")
+    lines = [ln.strip() for ln in soup.get_text("\n").split("\n") if ln.strip()]
+
+    advisories = []
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i]
+        if is_heading(line):
+            heading = line
+            issued_at = ""
+            body_lines = []
+
+            j = i + 1
+            if j < n and lines[j].lower().startswith("issued at"):
+                issued_at = lines[j]
+                j += 1
+
+            while j < n and not is_heading(lines[j]) and not is_stop_marker(lines[j]):
+                body_lines.append(lines[j])
+                j += 1
+
+            body = "\n".join(body_lines).strip()
+            adv_type = classify(heading)
+            key_source = f"{heading}|{issued_at}"
+            key = hashlib.sha256(key_source.encode("utf-8")).hexdigest()
+
+            # Location filter check:
+            full_content = f"{heading} {body}".lower()
+            if any(place in full_content for place in METRO_MANILA_KEYWORDS):
+                advisories.append(
+                    {
+                        "heading": heading,
+                        "issued_at": issued_at,
+                        "body": body,
+                        "type": adv_type,
+                        "key": key,
+                    }
+                )
+
+            i = j
+        else:
+            i += 1
+
+    return advisories
+    
 if __name__ == "__main__":
     sys.exit(main())
