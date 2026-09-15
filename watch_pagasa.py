@@ -6,6 +6,8 @@ Watches DOST-PAGASA's official NCR-PRSD regional forecast page for new
 Rainfall Advisory / Heavy Rainfall Warning / Thunderstorm Advisory / Thunderstorm
 Watch bulletins, and posts new ones to a Discord webhook.
 
+print("hi")
+
 Why this page and not Facebook directly:
   PAGASA's own site publishes the exact same bulletin text that gets posted to
   Facebook, at the same time (see https://pagasa.dost.gov.ph/learnings/legend,
