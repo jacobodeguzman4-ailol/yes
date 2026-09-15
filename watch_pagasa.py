@@ -20,7 +20,6 @@ Source page: https://pagasa.dost.gov.ph/regional-forecast/ncrprsd
 State (which advisories we've already alerted on) is kept in state.json so
 this script is safe to run on a schedule without spamming duplicate alerts.
 """
-print("hi")
 
 import hashlib
 import json
@@ -30,6 +29,8 @@ from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
+
+print("hi")
 
 SOURCE_URL = "https://pagasa.dost.gov.ph/regional-forecast/ncrprsd"
 STATE_PATH = Path(__file__).parent / "state.json"
