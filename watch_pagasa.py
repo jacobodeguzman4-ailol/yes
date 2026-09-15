@@ -243,21 +243,5 @@ def main() -> int:
 
     return 0
   
-def main() -> int:
-    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
-    if not webhook_url:
-        print("ERROR: DISCORD_WEBHOOK_URL environment variable is not set.", file=sys.stderr)
-        return 1
-
-    # TEMPORARY TEST CALL:
-    send_discord(webhook_url, {
-        "heading": "Test Alert",
-        "issued_at": "Issued right now",
-        "body": "If you see this, your Discord webhook is working properly!",
-        "type": "thunderstorm watch"
-    })
-    print("Test alert sent!")
-    return 0
-
 if __name__ == "__main__":
     sys.exit(main())
