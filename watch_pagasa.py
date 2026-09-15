@@ -186,17 +186,6 @@ def main() -> int:
         print("ERROR: DISCORD_WEBHOOK_URL environment variable is not set.", file=sys.stderr)
         return 1
 
-    # --- TEMPORARY TEST BLOCK ---
-    test_advisory = {
-        "heading": "Test Alert - Thunderstorm Watch",
-        "issued_at": "Issued right now",
-        "body": "If you see this image card, your Discord webhook and card renderer are working properly!",
-        "type": "thunderstorm watch",
-        "key": "1234567890abcdef"
-    }
-    send_discord(webhook_url, test_advisory)
-    print("Test alert sent successfully!")
-    return 0
     # --- END TEST BLOCK ---
 
 
