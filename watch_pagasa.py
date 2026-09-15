@@ -6,7 +6,7 @@ Watches DOST-PAGASA's official NCR-PRSD regional forecast page for new
 Rainfall Advisory / Heavy Rainfall Warning / Thunderstorm Advisory / Thunderstorm
 Watch bulletins, and posts new ones to a Discord webhook.
 
-print("hi")
+
 
 Why this page and not Facebook directly:
   PAGASA's own site publishes the exact same bulletin text that gets posted to
@@ -20,6 +20,7 @@ Source page: https://pagasa.dost.gov.ph/regional-forecast/ncrprsd
 State (which advisories we've already alerted on) is kept in state.json so
 this script is safe to run on a schedule without spamming duplicate alerts.
 """
+print("hi")
 
 import hashlib
 import json
