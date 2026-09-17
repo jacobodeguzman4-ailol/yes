@@ -136,11 +136,53 @@ def send_discord(webhook_url: str, item: dict, image_url: str | None) -> None:
     resp.raise_for_status()
 
 
+def build_test_item() -> dict:
+    """A guaranteed, clearly-labeled sample announcement for --test mode."""
+    return {
+        "title": "\U0001F9EA TEST MESSAGE \u2014 Walang Pasok (this is not a real announcement)",
+        "link": "https://quezoncity.gov.ph/announcements/",
+        "description": (
+            "<p>This is a TEST message from your QC suspension watcher, sent to confirm the "
+            "Discord webhook is working end-to-end. This is not an actual suspension "
+            "announcement.</p>"
+        ),
+        "pub_date": "",
+        "guid": "test-message-not-real",
+    }
+
+
 def main() -> int:
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
     if not webhook_url:
         print("ERROR: DISCORD_WEBHOOK_URL environment variable is not set.", file=sys.stderr)
         return 1
+
+    if "--test" in sys.argv:
+        # Prefer using the most recent real post's actual image (best test of
+        # the full pipeline); fall back to a synthetic sample with no image
+        # if that fails for any reason. Either way, qc_state.json is untouched.
+        image_url = None
+        try:
+            items = fetch_feed_items()
+        except requests.RequestException as exc:
+            print(f"Could not fetch the live feed ({exc}); using a synthetic sample instead.")
+            items = []
+
+        if items:
+            item = dict(items[0])
+            item["title"] = f"\U0001F9EA TEST SEND (using real latest post) \u2014 {item['title']}"
+            try:
+                image_url = fetch_og_image(items[0]["link"])
+            except requests.RequestException:
+                image_url = None
+            print(f"Sending a TEST message using the most recent real post: {items[0]['title']!r}")
+        else:
+            item = build_test_item()
+            print("Could not reach the live feed; sending a fully synthetic TEST message instead.")
+
+        send_discord(webhook_url, item, image_url)
+        print("Sent. qc_state.json was not modified.")
+        return 0
 
     items = fetch_feed_items()
     suspension_items = [i for i in items if is_suspension_post(i["title"])]

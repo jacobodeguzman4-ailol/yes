@@ -93,6 +93,28 @@ whenever a genuinely new advisory appears.
   Mindanao): change `SOURCE_URL` to the matching page, e.g.
   `https://pagasa.dost.gov.ph/regional-forecast/slprsd`.
 
+## Forcing a test message (no waiting for real conditions)
+
+Both scripts support `--test`, which sends one message to Discord immediately
+— using whatever's currently live if there's real content available, or a
+clearly-labeled synthetic sample otherwise — **without touching state.json**,
+so it has zero effect on real duplicate-detection.
+
+**From GitHub (no local setup needed):**
+Actions tab → pick the workflow ("Watch PAGASA NCR-PRSD Advisories" or
+"Watch QC Class/Work Suspension Announcements") → **Run workflow** → check
+the **"Send a test message..."** box → **Run workflow**. Check Discord after
+it finishes (usually under a minute).
+
+**Locally**, if you have Python set up:
+```bash
+pip install -r requirements.txt
+DISCORD_WEBHOOK_URL="your-webhook-url-here" python watch_pagasa.py --test
+DISCORD_WEBHOOK_URL="your-webhook-url-here" python watch_qc_suspension.py --test
+```
+
+Every test message is prefixed with 🧪 so it's unmistakably not a real alert.
+
 ## A known GitHub quirk
 
 GitHub automatically disables *scheduled* workflows in a repo that's had no

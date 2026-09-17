@@ -318,11 +318,50 @@ def send_discord(webhook_url: str, advisory: dict) -> None:
     resp.raise_for_status()
 
 
+def build_test_advisory() -> dict:
+    """A guaranteed, clearly-labeled sample advisory for --test mode."""
+    return {
+        "heading": "\U0001F9EA TEST MESSAGE \u2014 Thunderstorm Advisory No. 0 #NCR_PRSD",
+        "issued_at": "Issued at: this is a test send, not a real bulletin",
+        "body": (
+            "This is a TEST message from your PAGASA NCR-PRSD advisory watcher, sent to confirm "
+            "the Discord webhook and image rendering are working end-to-end.\n\n"
+            "Sample content \u2014 EXPECTING: rains over portions of Caloocan, Marikina and "
+            "Quezon City. This is not a real advisory."
+        ),
+        "type": "thunderstorm advisory",
+        "key": "test-message-not-real",
+    }
+
+
 def main() -> int:
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
     if not webhook_url:
         print("ERROR: DISCORD_WEBHOOK_URL environment variable is not set.", file=sys.stderr)
         return 1
+
+    if "--test" in sys.argv:
+        # Prefer sending whatever's actually live on PAGASA's page right now
+        # (real data is the best test); fall back to a synthetic sample if
+        # nothing is currently posted. Either way, state.json is untouched.
+        try:
+            html = fetch_page(SOURCE_URL)
+            live_advisories = extract_advisories(html)
+        except requests.RequestException as exc:
+            print(f"Could not fetch the live page ({exc}); using a synthetic sample instead.")
+            live_advisories = []
+
+        if live_advisories:
+            adv = dict(live_advisories[0])
+            adv["heading"] = f"\U0001F9EA TEST SEND (real current advisory) \u2014 {adv['heading']}"
+            print(f"Sending a TEST message using the current live advisory: {adv['heading']!r}")
+        else:
+            adv = build_test_advisory()
+            print("No advisory currently live on PAGASA's page; sending a synthetic TEST message instead.")
+
+        send_discord(webhook_url, adv)
+        print("Sent. state.json was not modified.")
+        return 0
 
     html = fetch_page(SOURCE_URL)
     advisories = extract_advisories(html)
