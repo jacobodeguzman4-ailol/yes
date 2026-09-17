@@ -3,7 +3,13 @@ name: Watch QC Class/Work Suspension Announcements
 on:
   schedule:
     - cron: "*/10 * * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Send a test message to Discord instead of checking for real announcements"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -26,7 +32,12 @@ jobs:
       - name: Run suspension check
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: python watch_qc_suspension.py
+        run: |
+          if [ "${{ inputs.test_mode }}" = "true" ]; then
+            python watch_qc_suspension.py --test
+          else
+            python watch_qc_suspension.py
+          fi
 
       - name: Commit updated state (if changed)
         run: |
