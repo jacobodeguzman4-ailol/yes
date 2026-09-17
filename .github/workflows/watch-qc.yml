@@ -1,14 +1,12 @@
-name: Watch PAGASA NCR-PRSD Advisories
+name: Watch QC Class/Work Suspension Announcements
 
 on:
   schedule:
-    # Every 10 minutes. GitHub may delay scheduled runs slightly during
-    # periods of high platform load -- this is normal and free of charge.
     - cron: "*/10 * * * *"
-  workflow_dispatch: {}  # lets you trigger a run manually from the Actions tab
+  workflow_dispatch: {}
 
 permissions:
-  contents: write  # needed so the workflow can commit the updated state.json
+  contents: write
 
 jobs:
   check:
@@ -25,15 +23,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run advisory check
+      - name: Run suspension check
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: python watch_pagasa.py
+        run: python watch_qc_suspension.py
 
       - name: Commit updated state (if changed)
         run: |
-          git config user.name "pagasa-advisory-bot"
+          git config user.name "qc-suspension-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add state.json
-          git diff --quiet --cached || git commit -m "Update advisory state"
+          git add qc_state.json
+          git diff --quiet --cached || git commit -m "Update QC suspension state"
           git push
