@@ -1,4 +1,6 @@
 {
-  "initialized": false,
-  "seen": []
+  "initialized": true,
+  "seen": [
+    "68f2973ebc62296cfb78bf347c061b918038be32d832c44de505c35fd6825a20"
+  ]
 }
