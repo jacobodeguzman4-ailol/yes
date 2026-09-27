@@ -31,16 +31,11 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 
+import net_utils
+
 FEED_URL = "https://quezoncity.gov.ph/feed/"
 STATE_PATH = Path(__file__).parent / "qc_state.json"
 MAX_SEEN_KEYS = 300
-
-UA_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (compatible; qc-suspension-watcher/1.0; "
-        "personal weather-alert project)"
-    )
-}
 
 # A title is treated as a suspension announcement if it contains any of these
 # (case-insensitive). Loose on purpose: QC Gov's titles vary a lot
@@ -62,7 +57,7 @@ def is_suspension_post(title: str) -> bool:
 
 
 def fetch_feed_items() -> list[dict]:
-    resp = requests.get(FEED_URL, headers=UA_HEADERS, timeout=30)
+    resp = net_utils.get(FEED_URL)
     resp.raise_for_status()
     root = ET.fromstring(resp.content)
     items = []
@@ -90,7 +85,7 @@ def clean_html_text(html_snippet: str) -> str:
 
 
 def fetch_og_image(post_url: str) -> str | None:
-    resp = requests.get(post_url, headers=UA_HEADERS, timeout=30)
+    resp = net_utils.get(post_url)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
     tag = soup.find("meta", attrs={"property": "og:image"})

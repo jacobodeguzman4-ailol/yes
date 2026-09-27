@@ -29,6 +29,7 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 
+import net_utils
 from render_card import render_advisory_card
 
 SOURCE_URL = "https://pagasa.dost.gov.ph/regional-forecast/ncrprsd"
@@ -117,16 +118,7 @@ DISCORD_COLORS = {
 
 
 def fetch_page(url: str) -> str:
-    resp = requests.get(
-        url,
-        headers={
-            "User-Agent": (
-                "Mozilla/5.0 (compatible; pagasa-ncr-advisory-bot/1.0; "
-                "personal weather-alert project)"
-            )
-        },
-        timeout=30,
-    )
+    resp = net_utils.get(url)
     resp.raise_for_status()
     return resp.text
 
