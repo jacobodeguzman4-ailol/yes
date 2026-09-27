@@ -35,7 +35,7 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          if [ "${{ inputs.test_mode }}" = "true" ]; then
+          if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
             python watch_pagasa.py --test
           else
             python watch_pagasa.py
@@ -46,5 +46,8 @@ jobs:
           git config user.name "pagasa-advisory-bot"
           git config user.email "actions@users.noreply.github.com"
           git add state.json
+          if [ -f data/ph_provinces.geojson ]; then
+            git add data/ph_provinces.geojson
+          fi
           git diff --quiet --cached || git commit -m "Update advisory state"
           git push

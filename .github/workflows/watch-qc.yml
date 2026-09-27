@@ -33,7 +33,7 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          if [ "${{ inputs.test_mode }}" = "true" ]; then
+          if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
             python watch_qc_suspension.py --test
           else
             python watch_qc_suspension.py
